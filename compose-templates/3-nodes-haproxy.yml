@@ -1,0 +1,65 @@
+version: '3'
+services:
+  rabbitmq-server1:
+    environment:
+      RABBITMQ_ERLANG_COOKIE: secret
+      TCP_PORTS: 5672,15672
+    hostname: rabbitmq-server1
+    image: zerpetfakename/rabbitmq-cluster:3.7
+    ports:
+    - 5672:5672
+    - 15672:15672
+  rabbitmq-server2:
+    environment:
+      CLUSTER_WITH: 'rabbit@rabbitmq-server1'
+      RABBITMQ_ERLANG_COOKIE: secret
+      TCP_PORTS: 5672,15672
+    hostname: rabbitmq-server2
+    image: zerpetfakename/rabbitmq-cluster:3.7
+    ports:
+    - 5673:5672
+    - 15673:15672
+  rabbitmq-server3:
+    environment:
+      CLUSTER_WITH: 'rabbit@rabbitmq-server1'
+      RABBITMQ_ERLANG_COOKIE: secret
+      TCP_PORTS: 5672,15672
+    hostname: rabbitmq-server3
+    image: zerpetfakename/rabbitmq-cluster:3.7
+    ports:
+    - 5674:5672
+    - 15674:15672
+  haproxy:
+    image: dockercloud/haproxy:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      MODE: tcp
+    expose:
+      - 5672
+      - 15672
+    links:
+      - rabbitmq-server1
+      - rabbitmq-server2
+      - rabbitmq-server3
+      - rabbitmq-producer
+      - rabbitmq-consumer
+    ports:
+      - '8888:80'
+      - '5682:5672'
+      - '8080:15672'
+    depends_on:
+      - rabbitmq-server1
+  rabbitmq-producer:
+   image: "damiano7pixel/pyrabbitmqproducer"
+   environment:
+    - RABBITMQ_HOST=haproxy
+    - RABBITMQ_QUEUE=messages
+    - PRODUCER_SLEEP_TIME=0.1
+   tty: 'true'
+  rabbitmq-consumer:
+   image: "damiano7pixel/pyrabbitmqconsumer"
+   environment:
+    - RABBITMQ_HOST=haproxy
+    - RABBITMQ_QUEUE=messages
+    - CONSUMER_SLEEP_TIME=0.2
