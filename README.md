@@ -66,6 +66,38 @@ docker-compose -p my-cluster -f compose-templates/3-disc-nodes.yml ps
 
 The management UI is available in all the nodes and it is forwarded to the local port 15672-15674.
 
+
+## HAProxy enabled docker-compose
+
+There is a separate setup with haproxy linked to the 3 nodes RabbbitMQ cluster. To deploy the 3 node RabbitMQ cluster with haproxy. There is a producer and consumer added in this deployment:
+
+```
+docker-compose -p rmq-cluster -f compose-templates/3-nodes-haproxy.yml up -d
+```
+
+The management UI is available directly by accessing the haproxy on port 8080.
+
+```
+http://127.0.0.1:8080
+```
+
+Start the Producer and Consumer as you need:
+
+```
+docker-compose -p rmq-cluster -f compose-templates/3-nodes-haproxy.yml start rabbitmq-producer
+```
+
+```
+docker-compose -p rmq-cluster -f compose-templates/3-nodes-haproxy.yml start rabbitmq-consumer
+```
+
+The final state of the cluster with haproxy and producer/consumer can be checked with this command:
+
+```
+docker-compose -p rmq-cluster -f compose-templates/3-nodes-haproxy.yml ps
+```
+
+
 ### Clean up
 
 Compose offers the command `down` to stop and remove the containers and network/s created in the project. A command as the following will do a "clean up":
